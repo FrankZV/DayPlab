@@ -1,7 +1,11 @@
 # ui/config_screen.py
+from themes import light_theme, dark_theme
+from theme_utils import save_theme_preference, load_theme_preference
+from PyQt5.QtWidgets import QApplication
+
 from PyQt5.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QLabel,
-    QPushButton, QLineEdit, QMessageBox, QDialogButtonBox, QStyle
+    QPushButton, QLineEdit, QMessageBox, QDialogButtonBox, QStyle, QComboBox
 )
 
 class ConfigWindow(QDialog):
@@ -9,7 +13,7 @@ class ConfigWindow(QDialog):
         super().__init__(parent)
         self.db = db
         self.setWindowTitle("Configuración")
-        self.setFixedSize(400, 270)
+        self.setFixedSize(400, 320)  # Aumenta el alto para el combo de tema
 
         self.setStyleSheet("""
             QDialog {
@@ -64,10 +68,27 @@ class ConfigWindow(QDialog):
         password_layout.addWidget(self.toggle_btn)
         layout.addLayout(password_layout)
 
+        # --- Selector de tema claro/oscuro ---
+        tema_layout = QHBoxLayout()
+        tema_label = QLabel("Tema:")
+        tema_label.setStyleSheet("font-size: 15px; font-weight: normal;")
+        self.tema_combo = QComboBox()
+        self.tema_combo.addItem("Claro")
+        self.tema_combo.addItem("Oscuro")
+        tema_layout.addWidget(tema_label)
+        tema_layout.addWidget(self.tema_combo)
+        layout.addLayout(tema_layout)
+
+        # Cargar preferencia guardada
+        tema_actual = load_theme_preference()
+        self.tema_combo.setCurrentText(tema_actual)
+
         botones = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
         botones.accepted.connect(self.guardar_cambios)
         botones.rejected.connect(self.reject)
         layout.addWidget(botones)
+        
+#_____________________________________________________________________________
 
     def toggle_password(self, line_edit, button):
         if line_edit.echoMode() == QLineEdit.Password:
@@ -81,6 +102,14 @@ class ConfigWindow(QDialog):
         email = self.email_input.text().strip()
         telefono = self.phone_input.text().strip()
         password = self.password_input.text().strip()
+
+        # --- Guardar preferencia de tema ---
+        tema = self.tema_combo.currentText()
+        if tema == "Claro":
+            QApplication.instance().setStyleSheet(light_theme)
+        else:
+            QApplication.instance().setStyleSheet(dark_theme)
+        save_theme_preference(tema)
 
         if not email:
             QMessageBox.warning(self, "Error", "Ingrese su correo para actualizar.")
