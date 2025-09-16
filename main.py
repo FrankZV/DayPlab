@@ -2,6 +2,11 @@
 import os
 from database.db_manager import DBManager
 from models.task import Task
+# Ruta base del proyecto (donde está este archivo main.py)
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+def icon_path(filename):
+    return os.path.join(BASE_DIR, "Iconos", filename)
 
 #_---------------- Librerías para notificaciones ---------------- #
 from notifications.email_service import send_email
@@ -14,7 +19,7 @@ from PyQt5.QtWidgets import (
     QPushButton, QFrame, QDialog, QFormLayout, QLineEdit,
     QTextEdit, QDateEdit, QComboBox, QDialogButtonBox, QMessageBox
 )
-from PyQt5.QtCore import Qt, QDate, QSize
+from PyQt5.QtCore import Qt, QDate, QSize, QTimer
 from PyQt5.QtGui import QIcon
 
 from ui.calendario import CalendarioWindow
@@ -107,7 +112,7 @@ app = QApplication([])
 db = DBManager()
 
 # ---------------- Usuarios en sesion ---------------- #
-current_user_id = None  # 👈 aquí guardamos el usuario en sesión
+current_user_id = None  # aquí guardamos el usuario en sesión
 current_user_id = 1  # Para pruebas sin login
 #db.set_current_user(current_user_id)
 
@@ -115,7 +120,7 @@ current_user_id = 1  # Para pruebas sin login
 
 ventana = QWidget()
 ventana.setWindowTitle("DayPlan - Gestión de Tareas y Agenda Diaria")
-ventana.setWindowIcon(QIcon("Iconos/DP-01.png"))
+ventana.setWindowIcon(QIcon(icon_path("DP-01.png")))
 ventana.setGeometry(100, 100, 1200, 700)
 ventana.setStyleSheet("background-color: #F08080;")
 
@@ -188,7 +193,7 @@ btn_task.setStyleSheet("""
 
 btn_calendar = QPushButton()
 btn_calendar.setFixedSize(50, 40)
-btn_calendar.setIcon(QIcon("Iconos/Calendar.png"))
+btn_calendar.setIcon(QIcon(icon_path("Calendar.png")))
 btn_calendar.setIconSize(QSize(24, 24))
 btn_calendar.setStyleSheet("""
     QPushButton {
@@ -202,7 +207,7 @@ btn_calendar.setStyleSheet("""
 
 btn_tiempo = QPushButton()
 btn_tiempo.setFixedSize(50, 40)
-btn_tiempo.setIcon(QIcon("Iconos/Clock.png"))
+btn_tiempo.setIcon(QIcon(icon_path("Clock.png")))
 btn_tiempo.setIconSize(QSize(24, 24))
 btn_tiempo.setStyleSheet("""
     QPushButton {
@@ -216,7 +221,7 @@ btn_tiempo.setStyleSheet("""
 
 btn_notificaciones = QPushButton()
 btn_notificaciones.setFixedSize(50, 40)
-btn_notificaciones.setIcon(QIcon("Iconos/Notification.png"))
+btn_notificaciones.setIcon(QIcon(icon_path("Notification.png")))
 btn_notificaciones.setIconSize(QSize(24, 24))
 btn_notificaciones.setStyleSheet("""
     QPushButton {
@@ -506,6 +511,7 @@ def abrir_app(usuario_id):
     ventana.show()
 
 
+# --- Login y Splash --- #
 
 login_window = None
 def abrir_login():
@@ -515,8 +521,17 @@ def abrir_login():
     login_window = LoginWindow(callback_abrir_app=abrir_app, db=db)
     login_window.show()
 
+# ---------------- SplashScreen ---------------- #
 splash = SplashScreen()
-splash.iniciar(abrir_login, 3000)
+print("Mostrando splash...")
+
+splash.show()
+app.processEvents()  # 👈 fuerza a Qt a renderizar la splash inmediatamente
+
+splash.raise_()
+splash.activateWindow()
+QTimer.singleShot(5000, lambda: splash._abrir(abrir_login))
+
 app.exec_()
 
 
